@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: multiplex-overlay
+    runtime: docker
+    plan: starter        # le disque persistant nécessite un plan payant
+    healthCheckPath: /api/state
+    envVars:
+      - key: ADMIN_PASSWORD
+        sync: false      # tu le saisis dans le dashboard Render
+    disk:
+      name: multiplex-data
+      mountPath: /data
+      sizeGB: 1

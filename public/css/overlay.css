@@ -1,0 +1,300 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,500;0,600;0,700;0,800;0,900&family=Oswald:wght@500;600;700&display=swap');
+
+:root {
+  --accent: #ff3d85;
+  --accent-soft: rgba(255, 61, 133, 0.45);
+  --badge-bg: #e0457b;
+  --bar-h: 64px;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: transparent !important;
+  font-family: 'Montserrat', 'Segoe UI', sans-serif;
+  user-select: none;
+}
+
+/* ===== WRAPPER : pleine largeur (1920) ===== */
+.overlay-wrapper {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  pointer-events: none;
+}
+.overlay-wrapper.pos-bottom { bottom: 0; }
+.overlay-wrapper.pos-top { top: 0; }
+
+/* ===== BARRE ===== */
+.multiplex-bar {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  align-items: stretch;
+  width: 100%;
+  height: var(--bar-h);
+  background-color: #12040a;
+  border-top: 3px solid var(--accent);
+  box-shadow: 0 -2px 22px var(--accent-soft), 0 6px 24px rgba(0, 0, 0, 0.6);
+  overflow: hidden;
+  font-size: 22px;
+}
+.pos-top .multiplex-bar {
+  border-top: none;
+  border-bottom: 3px solid var(--accent);
+  box-shadow: 0 2px 22px var(--accent-soft), 0 6px 24px rgba(0, 0, 0, 0.6);
+}
+
+/* reflet metallique sur toute la barre */
+.multiplex-bar::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.07) 0%, rgba(255, 255, 255, 0) 45%, rgba(0, 0, 0, 0.35) 100%),
+    radial-gradient(ellipse at 12% 50%, rgba(255, 61, 133, 0.22), transparent 55%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ===== LOGO ===== */
+.logo-block {
+  position: relative;
+  flex-shrink: 0;
+  height: 100%;
+  aspect-ratio: 1 / 1;
+  background-image: url('/img/logo.png');
+  background-repeat: no-repeat;
+  background-size: 182.857%;
+  background-position: 55% 41%;
+  mix-blend-mode: screen; /* retire le fond noir du logo */
+  z-index: 3;
+}
+
+/* ===== BADGE "EN DIRECT" ===== */
+.badge-block {
+  position: relative;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 46px 0 26px;
+  margin-left: -4px;
+  background-color: var(--badge-bg);
+  color: #fff;
+  font-family: 'Oswald', sans-serif;
+  font-weight: 700;
+  font-size: 1.05em;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.45);
+  /* bord droit incline comme le "7" */
+  clip-path: polygon(0 0, 100% 0, calc(100% - 22px) 100%, 0 100%);
+  z-index: 4;
+  overflow: hidden;
+}
+.badge-block::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.28), rgba(255, 255, 255, 0) 50%, rgba(0, 0, 0, 0.25));
+}
+.badge-block::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -60%;
+  width: 40%;
+  background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.45), transparent);
+  transform: skewX(-20deg);
+  animation: badge-shine 5s ease-in-out infinite;
+}
+@keyframes badge-shine {
+  0%, 60% { left: -60%; }
+  100% { left: 140%; }
+}
+#badgeText { position: relative; z-index: 1; }
+
+/* ===== VIEWPORT DU TICKER ===== */
+.ticker-viewport {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  margin-left: -14px;
+  z-index: 1;
+  -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 48px, #000 calc(100% - 48px), transparent 100%);
+  mask-image: linear-gradient(90deg, transparent 0, #000 48px, #000 calc(100% - 48px), transparent 100%);
+}
+
+.ticker-track {
+  display: flex;
+  align-items: center;
+  height: 100%;
+  white-space: nowrap;
+  will-change: transform;
+  backface-visibility: hidden;
+  transform: translate3d(0, 0, 0);
+}
+.ticker-track.static-mode {
+  width: 100%;
+  justify-content: space-around;
+}
+
+/* element de mesure (invisible) */
+.ticker-track.measure {
+  position: absolute;
+  visibility: hidden;
+  left: 0;
+  top: 0;
+  height: auto;
+  pointer-events: none;
+}
+
+/* ===== MATCH ===== */
+.match-item {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  height: 100%;
+  padding: 0 38px;
+  color: #fff;
+  font-weight: 600;
+  letter-spacing: 0.4px;
+}
+.match-item::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 24%;
+  height: 52%;
+  width: 2px;
+  background: var(--accent);
+  opacity: 0.45;
+  transform: skewX(-20deg);
+}
+
+.live-dot {
+  width: 10px;
+  height: 10px;
+  margin-right: 12px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: #ff2d55;
+  box-shadow: 0 0 10px #ff2d55;
+  animation: pulse-live 1.6s ease-in-out infinite;
+}
+@keyframes pulse-live {
+  0%, 100% { transform: scale(0.85); opacity: 0.7; }
+  50% { transform: scale(1.25); opacity: 1; box-shadow: 0 0 16px #ff6b8b; }
+}
+
+.team-name {
+  font-weight: 700;
+  font-size: 1.02em;
+  color: #fff;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.7);
+}
+
+.score-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 16px;
+  padding: 2px 12px;
+  color: #ff8fb8;
+  font-family: 'Oswald', sans-serif;
+  font-weight: 700;
+  font-size: 1.2em;
+  letter-spacing: 1px;
+  text-shadow: 0 0 12px rgba(255, 61, 133, 0.6);
+  background: rgba(255, 61, 133, 0.12);
+  border: 1px solid rgba(255, 61, 133, 0.35);
+  border-radius: 4px;
+  transform: skewX(-12deg);
+}
+.score-badge > span { display: inline-block; transform: skewX(12deg); }
+.score-dash { margin: 0 7px; opacity: 0.8; }
+
+.score-pop { animation: score-pop 0.9s cubic-bezier(0.2, 1.4, 0.4, 1); }
+@keyframes score-pop {
+  0% { transform: skewX(-12deg) scale(1); }
+  35% { transform: skewX(-12deg) scale(1.35); background: rgba(255, 61, 133, 0.55); }
+  100% { transform: skewX(-12deg) scale(1); }
+}
+
+/* ===== STATUTS ===== */
+.status-badge {
+  margin-left: 12px;
+  padding: 2px 8px;
+  font-size: 0.68em;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  border-radius: 4px;
+}
+.status-live { background: rgba(255, 45, 85, 0.22); color: #ff9db3; border: 1px solid rgba(255, 45, 85, 0.5); }
+.status-halftime { background: rgba(255, 190, 90, 0.18); color: #ffd699; border: 1px solid rgba(255, 190, 90, 0.4); }
+.status-finished { background: rgba(255, 255, 255, 0.1); color: #d6c4cb; border: 1px solid rgba(255, 255, 255, 0.22); }
+.status-upcoming { background: rgba(255, 61, 133, 0.12); color: #ffb3cd; border: 1px solid rgba(255, 61, 133, 0.35); }
+
+/* ===== CARROUSEL ===== */
+.ticker-carousel {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  width: 100%;
+  height: 100%;
+  transition: opacity 0.5s ease, transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.ticker-carousel.carousel-exit { opacity: 0; transform: translate3d(0, 14px, 0); }
+.ticker-carousel.carousel-enter { opacity: 1; transform: translate3d(0, 0, 0); }
+
+/* ===== ALERTE BUT ===== */
+.goal-flash { animation: goal-flash-glow 1.2s ease-in-out infinite; }
+@keyframes goal-flash-glow {
+  0%, 100% { background: rgba(255, 61, 133, 0.08); }
+  50% { background: rgba(255, 61, 133, 0.38); box-shadow: 0 0 24px rgba(255, 61, 133, 0.6); }
+}
+
+.goal-banner-overlay {
+  position: absolute;
+  left: 50%;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 8px 40px;
+  color: #fff;
+  font-family: 'Oswald', sans-serif;
+  font-weight: 700;
+  font-size: 28px;
+  letter-spacing: 3px;
+  background: linear-gradient(135deg, #ff3d85, #b0204f);
+  box-shadow: 0 0 30px rgba(255, 61, 133, 0.6);
+  opacity: 0;
+  pointer-events: none;
+  z-index: 100;
+  transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.35s ease;
+}
+.pos-bottom .goal-banner-overlay {
+  bottom: 100%;
+  border-radius: 8px 8px 0 0;
+  transform: translate3d(-50%, 100%, 0);
+}
+.pos-top .goal-banner-overlay {
+  top: 100%;
+  border-radius: 0 0 8px 8px;
+  transform: translate3d(-50%, -100%, 0);
+}
+.goal-banner-overlay.show { opacity: 1; transform: translate3d(-50%, 0, 0); }

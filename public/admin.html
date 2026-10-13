@@ -1,0 +1,312 @@
+﻿<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Multiplex TV - Panneau de Contrôle en Direct</title>
+  <link rel="stylesheet" href="/css/admin.css">
+</head>
+<body>
+
+  <!-- NAVBAR -->
+  <nav class="navbar">
+    <div class="nav-brand">
+      <span class="brand-icon">⚽</span>
+      <h1>Multiplex TV <span style="font-weight:400; color:var(--text-muted); font-size:14px;">Contrôle Live</span></h1>
+      <div class="live-indicator-badge">
+        <span class="dot-pulse"></span>
+        <span id="connectionStatus">CONNECTÉ EN DIRECT</span>
+      </div>
+    </div>
+
+    <div class="nav-actions">
+      <!-- Preset Dropdown -->
+      <select id="presetSelect" class="form-select" style="padding: 7px 12px; font-size: 13px;">
+        <option value="" disabled selected>⚡ Charger un exemple...</option>
+        <option value="screenshotExample">📸 Exemple comme la photo</option>
+        <option value="ligue1">🇫🇷 Multiplex Ligue 1</option>
+        <option value="championsLeague">⭐ Ligue des Champions</option>
+      </select>
+
+      <button id="btnOpenOverlay" class="btn btn-secondary" title="Ouvrir l'overlay dans un nouvel onglet">
+        📺 Ouvrir Overlay
+      </button>
+
+      <button id="btnCopyOverlayUrl" class="btn btn-primary">
+        📋 Copier lien OBS
+      </button>
+    </div>
+  </nav>
+
+  <!-- MAIN CONTAINER -->
+  <main class="container">
+
+    <!-- LIVE PREVIEW OF THE OVERLAY -->
+    <div class="preview-card">
+      <div class="preview-header">
+        <div class="preview-title">
+          <span>Aperçu de l'Overlay en Direct</span>
+          <span style="font-size:11px; text-transform:none; color:var(--text-muted);">(Tel qu'il apparaît dans OBS)</span>
+        </div>
+        <button id="btnRefreshPreview" class="btn btn-secondary btn-sm" title="Recharger l'aperçu">
+          🔄 Actualiser
+        </button>
+      </div>
+      <div class="preview-frame">
+        <iframe id="previewIframe" src="/overlay?preview=1"></iframe>
+      </div>
+    </div>
+
+    <!-- MAIN 2-COLUMN GRID -->
+    <div class="main-grid">
+
+      <!-- LEFT COLUMN: MATCHES MANAGEMENT -->
+      <section>
+        <div class="card">
+          <div class="card-title">
+            <span>Matchs en Direct (<span id="matchesCount">0</span>)</span>
+            <div style="display:flex; gap:8px;">
+              <button id="btnAddMatchModal" class="btn btn-primary btn-sm">
+                ➕ Nouveau match
+              </button>
+              <button id="btnClearMatches" class="btn btn-danger btn-sm" title="Effacer tous les matchs">
+                🗑️ Tout effacer
+              </button>
+            </div>
+          </div>
+
+          <!-- LIST OF MATCHES -->
+          <div id="matchesList" class="matches-list">
+            <!-- Dynamically populated -->
+          </div>
+        </div>
+      </section>
+
+      <!-- RIGHT COLUMN: SETTINGS & OBS INTEGRATION -->
+      <aside>
+        <!-- OBS INTEGRATION -->
+        <div class="card">
+          <div class="card-title">
+            <span>Intégration OBS Studio</span>
+          </div>
+          <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 8px;">
+            Ajoutez l'overlay en tant que source navigateur dans OBS Studio ou Streamlabs :
+          </p>
+          <div class="obs-code-box">
+            <span id="obsUrlDisplay">http://localhost:3000/overlay</span>
+            <button id="btnCopyCode" class="btn btn-secondary btn-sm">Copier</button>
+          </div>
+          <ol class="obs-steps">
+            <li>Dans OBS, cliquez sur <strong>+</strong> dans les <em>Sources</em></li>
+            <li>Sélectionnez <strong>Navigateur</strong> (Browser)</li>
+            <li>Collez l'URL ci-dessus</li>
+            <li>Largeur : <strong>1920</strong> | Hauteur : <strong>1080</strong></li>
+            <li>Mets <strong>FPS personnalisé = 60</strong> (important pour la fluidité)</li>
+            <li>Cochez <em>"Actualiser le navigateur lorsque la scène devient active"</em></li>
+          </ol>
+        </div>
+
+        <!-- SETTINGS -->
+        <div class="card">
+          <div class="card-title">
+            <span>Paramètres de l'Overlay</span>
+          </div>
+
+          <form id="settingsForm" class="settings-form" onsubmit="return false;">
+            <!-- Badge Text -->
+            <div class="form-group">
+              <label for="settingBadgeText">Texte du Badge gauche</label>
+              <input type="text" id="settingBadgeText" class="form-input" value="EN DIRECT" placeholder="Ex: EN DIRECT, MULTIPLEX...">
+            </div>
+
+            <!-- Colors -->
+            <div class="color-row">
+              <div class="form-group">
+                <label>Couleur Badge</label>
+                <div class="color-picker-group">
+                  <input type="color" id="settingBadgeBg" value="#e5a93c">
+                  <span id="settingBadgeBgHex">#e5a93c</span>
+                </div>
+              </div>
+              <div class="form-group">
+                <label>Texte Badge</label>
+                <div class="color-picker-group">
+                  <input type="color" id="settingBadgeColor" value="#0a0a0a">
+                  <span id="settingBadgeColorHex">#0a0a0a</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="color-row">
+              <div class="form-group">
+                <label>Fond du bandeau</label>
+                <div class="color-picker-group">
+                  <input type="color" id="settingBarBg" value="#061f17">
+                  <span id="settingBarBgHex">#061f17</span>
+                </div>
+              </div>
+              <div class="form-group">
+                <label>Liseré supérieur</label>
+                <div class="color-picker-group">
+                  <input type="color" id="settingBarBorderColor" value="#d49b35">
+                  <span id="settingBarBorderColorHex">#d49b35</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="color-row">
+              <div class="form-group">
+                <label>Couleur Score</label>
+                <div class="color-picker-group">
+                  <input type="color" id="settingScoreColor" value="#f3b33d">
+                  <span id="settingScoreColorHex">#f3b33d</span>
+                </div>
+              </div>
+              <div class="form-group">
+                <label>Couleur Équipes</label>
+                <div class="color-picker-group">
+                  <input type="color" id="settingTextColor" value="#ffffff">
+                  <span id="settingTextColorHex">#ffffff</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Display Mode -->
+            <div class="form-group">
+              <label for="settingDisplayMode">Mode d'affichage</label>
+              <select id="settingDisplayMode" class="form-select">
+                <option value="marquee">Défilement continu (Marquee TV)</option>
+                <option value="carousel">Carrousel par page (4 matchs à la fois)</option>
+                <option value="static">Statique (fixe)</option>
+              </select>
+            </div>
+
+            <!-- Marquee Speed -->
+            <div class="form-group" id="speedGroup">
+              <label for="settingMarqueeSpeed">Vitesse de défilement (<span id="speedValue">70</span> px/s)</label>
+              <input type="range" id="settingMarqueeSpeed" min="20" max="200" step="5" value="70" style="width: 100%; accent-color: var(--accent-gold);">
+            </div>
+
+            <!-- Bar height -->
+            <div class="form-group">
+              <label for="settingBarHeight">Hauteur du bandeau (<span id="heightValue">64</span> px)</label>
+              <input type="range" id="settingBarHeight" min="44" max="110" step="2" value="64" style="width: 100%; accent-color: var(--accent-gold);">
+            </div>
+
+            <!-- Font size -->
+            <div class="form-group">
+              <label for="settingFontSize">Taille du texte (<span id="fontValue">22</span> px)</label>
+              <input type="range" id="settingFontSize" min="14" max="40" step="1" value="22" style="width: 100%; accent-color: var(--accent-gold);">
+            </div>
+
+            <!-- Position -->
+            <div class="form-group">
+              <label for="settingBarPosition">Position à l'écran</label>
+              <select id="settingBarPosition" class="form-select">
+                <option value="bottom">Bas de l'écran (Standard)</option>
+                <option value="top">Haut de l'écran</option>
+              </select>
+            </div>
+
+            <button id="btnSaveSettings" class="btn btn-primary" style="width:100%; margin-top:8px;">
+              💾 Enregistrer les Réglages
+            </button>
+          </form>
+        </div>
+
+        <!-- SON DE BUT -->
+        <div class="card">
+          <div class="card-title">
+            <span>🔊 Son de but</span>
+          </div>
+
+          <div class="settings-form">
+            <div class="form-group" style="flex-direction:row; align-items:center; justify-content:space-between;">
+              <label for="settingSoundOnGoal" style="cursor:pointer;">Jouer un son quand un but est marqué</label>
+              <input type="checkbox" id="settingSoundOnGoal" style="accent-color: var(--accent-gold); width:18px; height:18px; cursor:pointer;">
+            </div>
+
+            <div class="form-group">
+              <label>Fichier actuel</label>
+              <div id="soundFileName" class="obs-code-box" style="margin:0; color: var(--text-secondary);">Aucun son</div>
+            </div>
+
+            <div class="form-group">
+              <label for="soundFileInput">Choisir un fichier audio</label>
+              <input type="file" id="soundFileInput" class="form-input" accept=".mp3,.wav,.ogg,.m4a,.aac,.flac,.webm,.opus,audio/*">
+              <span style="font-size:12px; color:var(--text-muted);">Formats : MP3, WAV, OGG, M4A, AAC, FLAC, WEBM, OPUS (30 Mo max)</span>
+            </div>
+
+            <div class="form-group">
+              <label for="settingGoalVolume">Volume (<span id="goalVolumeValue">80</span>%)</label>
+              <input type="range" id="settingGoalVolume" min="0" max="100" step="1" value="80" style="width: 100%; accent-color: var(--accent-gold);">
+            </div>
+
+            <div style="display:flex; gap:8px; flex-wrap:wrap;">
+              <button type="button" id="btnTestSoundOverlay" class="btn btn-primary btn-sm">▶ Tester dans OBS</button>
+              <button type="button" id="btnTestSoundLocal" class="btn btn-secondary btn-sm">🎧 Écouter ici</button>
+              <button type="button" id="btnRemoveSound" class="btn btn-danger btn-sm">Retirer le son</button>
+            </div>
+
+            <p style="font-size:12px; color:var(--text-muted); line-height:1.5;">
+              Pour régler le volume depuis OBS : dans les propriétés de la source navigateur,
+              coche <strong>« Contrôler l'audio via OBS »</strong>. La source apparaît alors dans le
+              <em>Mélangeur audio</em> avec son propre curseur.
+            </p>
+          </div>
+        </div>
+      </aside>
+
+    </div>
+  </main>
+
+  <!-- MODAL: AJOUTER UN MATCH -->
+  <div id="addMatchModal" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 style="font-size:18px; font-weight:700;">Ajouter un nouveau match</h3>
+        <button id="btnCloseModal" class="modal-close">&times;</button>
+      </div>
+      <form id="addMatchForm">
+        <div class="form-group" style="margin-bottom:12px;">
+          <label>Équipe Domicile</label>
+          <input type="text" id="newHomeTeam" class="form-input" placeholder="Ex: Real Madrid" required>
+        </div>
+        <div class="form-group" style="margin-bottom:12px;">
+          <label>Équipe Extérieur</label>
+          <input type="text" id="newAwayTeam" class="form-input" placeholder="Ex: Barcelone" required>
+        </div>
+        <div class="color-row" style="margin-bottom:12px;">
+          <div class="form-group">
+            <label>Score Domicile</label>
+            <input type="number" id="newHomeScore" class="form-input" min="0" value="0">
+          </div>
+          <div class="form-group">
+            <label>Score Extérieur</label>
+            <input type="number" id="newAwayScore" class="form-input" min="0" value="0">
+          </div>
+        </div>
+        <div class="form-group" style="margin-bottom:12px;">
+          <label>Statut</label>
+          <select id="newStatus" class="form-select">
+            <option value="live">🔴 En cours</option>
+            <option value="upcoming">⏳ À venir</option>
+            <option value="finished">🏁 Fini</option>
+          </select>
+        </div>
+        <div class="modal-footer">
+          <button type="button" id="btnCancelModal" class="btn btn-secondary">Annuler</button>
+          <button type="submit" class="btn btn-primary">Ajouter le match</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATION -->
+  <div id="toast" class="toast">Action effectuée avec succès !</div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/js/admin.js"></script>
+</body>
+</html>
+

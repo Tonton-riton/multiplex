@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Overlay Multiplex TV - OBS</title>
+  <link rel="stylesheet" href="/css/overlay.css">
+</head>
+<body>
+
+  <div id="overlayWrapper" class="overlay-wrapper pos-bottom">
+
+    <!-- Bandeau BUT -->
+    <div id="goalBanner" class="goal-banner-overlay">
+      <span>⚽ BUT !</span>
+      <span id="goalTeamText">ÉQUIPE</span>
+    </div>
+
+    <div id="multiplexBar" class="multiplex-bar">
+      <div class="logo-block"></div>
+      <div id="badgeBlock" class="badge-block"><span id="badgeText">EN DIRECT</span></div>
+
+      <div id="tickerViewport" class="ticker-viewport">
+        <div id="tickerTrack" class="ticker-track"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/js/overlay.js"></script>
+</body>
+</html>
