@@ -15,6 +15,7 @@ const PORT = process.env.PORT || 3000;
 const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, 'data');
 const MATCHES_FILE = path.join(DATA_DIR, 'matches.json');
 const SETTINGS_FILE = path.join(DATA_DIR, 'settings.json');
+const TOURNAMENT_FILE = path.join(DATA_DIR, 'tournament.json');
 
 // Ensure data folder exists
 if (!fs.existsSync(DATA_DIR)) {
@@ -115,6 +116,24 @@ let settings = loadJson(SETTINGS_FILE, {
   goalSoundName: "",
   goalSoundVersion: 0,
   goalVolume: 80
+});
+let tournament = loadJson(TOURNAMENT_FILE, {
+  title: "TOURNOI DES CHAMPIONS",
+  groupsCount: 2,
+  activeOverlayView: "groups",
+  participants: [],
+  groups: [],
+  groupMatches: [],
+  playoffs: {
+    semi1: { home: "1er Poule A", away: "2ème Poule B", homeScore: 0, awayScore: 0, played: false, winner: "" },
+    semi2: { home: "1er Poule B", away: "2ème Poule A", homeScore: 0, awayScore: 0, played: false, winner: "" },
+    final: { home: "Vainqueur Demi 1", away: "Vainqueur Demi 2", homeScore: 0, awayScore: 0, played: false, winner: "" }
+  },
+  drawLive: {
+    isDrawing: false,
+    currentStep: 0,
+    revealedIds: []
+  }
 });
 
 // Middleware
@@ -233,9 +252,17 @@ app.get('/overlay', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'overlay.html'));
 });
 
+app.get('/tournament-overlay', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'tournament-overlay.html'));
+});
+
 // REST fallback API
 app.get('/api/state', (req, res) => {
-  res.json({ matches, settings });
+  res.json({ matches, settings, tournament });
+});
+
+app.get('/api/tournament', (req, res) => {
+  res.json(tournament);
 });
 
 // Presets
@@ -277,7 +304,132 @@ io.on('connection', (socket) => {
   socket.on('error', () => {});
 
   // Send current state on connect
-  socket.emit('init', { matches, settings });
+  socket.emit('init', { matches, settings, tournament });
+
+  // ===== TOURNAMENT SOCKET EVENTS =====
+  socket.on('tournament:update', (updatedTournament) => {
+    tournament = { ...tournament, ...updatedTournament };
+    saveJson(TOURNAMENT_FILE, tournament);
+    io.emit('tournament:updated', tournament);
+  });
+
+  socket.on('tournament:set_view', (viewName) => {
+    tournament.activeOverlayView = viewName;
+    saveJson(TOURNAMENT_FILE, tournament);
+    io.emit('tournament:updated', tournament);
+  });
+
+  socket.on('tournament:draw_random', (data) => {
+    const groupsCount = (data && data.groupsCount) || tournament.groupsCount || 2;
+    tournament.groupsCount = groupsCount;
+
+    // Mélange des participants (Fisher-Yates)
+    const shuffled = [...tournament.participants].sort(() => Math.random() - 0.5);
+
+    const groupLetters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
+    const groups = [];
+    for (let i = 0; i < groupsCount; i++) {
+      groups.push({
+        id: groupLetters[i],
+        name: `Poule ${groupLetters[i]}`,
+        teamIds: []
+      });
+    }
+
+    // Répartition équitable
+    shuffled.forEach((p, idx) => {
+      groups[idx % groupsCount].teamIds.push(p.id);
+    });
+
+    tournament.groups = groups;
+
+    // Génération automatique des matchs pour chaque poule
+    const groupMatches = [];
+    let matchCounter = 1;
+    groups.forEach(g => {
+      const ids = g.teamIds;
+      for (let i = 0; i < ids.length; i++) {
+        for (let j = i + 1; j < ids.length; j++) {
+          groupMatches.push({
+            id: `gm-${Date.now()}-${matchCounter++}`,
+            groupId: g.id,
+            homeId: ids[i],
+            awayId: ids[j],
+            homeScore: 0,
+            awayScore: 0,
+            played: false
+          });
+        }
+      }
+    });
+
+    tournament.groupMatches = groupMatches;
+    tournament.drawLive = {
+      isDrawing: false,
+      currentStep: shuffled.length,
+      revealedIds: shuffled.map(p => p.id)
+    };
+
+    saveJson(TOURNAMENT_FILE, tournament);
+    io.emit('tournament:updated', tournament);
+  });
+
+  socket.on('tournament:match_score', (data) => {
+    const { matchId, homeScore, awayScore, played } = data;
+    const match = tournament.groupMatches.find(m => m.id === matchId);
+    if (match) {
+      match.homeScore = Number(homeScore) || 0;
+      match.awayScore = Number(awayScore) || 0;
+      match.played = played !== undefined ? played : true;
+      saveJson(TOURNAMENT_FILE, tournament);
+      io.emit('tournament:updated', tournament);
+    }
+  });
+
+  socket.on('tournament:playoff_update', (data) => {
+    tournament.playoffs = { ...tournament.playoffs, ...data };
+    saveJson(TOURNAMENT_FILE, tournament);
+    io.emit('tournament:updated', tournament);
+  });
+
+  socket.on('tournament:draw_step', (stepData) => {
+    tournament.drawLive = { ...tournament.drawLive, ...stepData };
+    saveJson(TOURNAMENT_FILE, tournament);
+    io.emit('tournament:updated', tournament);
+  });
+
+  // Exportation des matchs du tournoi vers le ticker multiplex d'OBS en 1 clic !
+  socket.on('tournament:export_to_multiplex', (options) => {
+    const participantMap = {};
+    tournament.participants.forEach(p => {
+      participantMap[p.id] = p;
+    });
+
+    const newMatches = tournament.groupMatches.map(gm => {
+      const pHome = participantMap[gm.homeId] || { name: 'Joueur 1', team: 'Équipe 1' };
+      const pAway = participantMap[gm.awayId] || { name: 'Joueur 2', team: 'Équipe 2' };
+
+      const homeLabel = pHome.name ? `${pHome.name} (${pHome.team || ''})` : pHome.team;
+      const awayLabel = pAway.name ? `${pAway.name} (${pAway.team || ''})` : pAway.team;
+
+      return {
+        id: `tourn-${gm.id}`,
+        homeTeam: homeLabel,
+        awayTeam: awayLabel,
+        homeScore: gm.homeScore,
+        awayScore: gm.awayScore,
+        status: gm.played ? 'finished' : 'upcoming',
+        minute: gm.played ? 'FIN' : `Poule ${gm.groupId}`,
+        visible: true
+      };
+    });
+
+    matches = newMatches;
+    saveJson(MATCHES_FILE, matches);
+    io.emit('matches:updated', matches);
+  });
+
+  // ===== MATCHES EVENTS =====
 
   // Update match
   socket.on('match:update', (updatedMatch) => {

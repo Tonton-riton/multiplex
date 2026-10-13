@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Overlay Tournoi - Broadcast OBS</title>
+  <link rel="stylesheet" href="/css/tournament-overlay.css">
+</head>
+<body>
+
+  <div id="tournamentOverlayRoot" class="tournament-overlay-root view-groups">
+
+    <!-- HEADER BRANDING -->
+    <header class="tourn-overlay-header">
+      <div class="header-logo-badge">
+        <div class="logo-7"></div>
+      </div>
+      <div class="header-titles">
+        <div class="header-sub">OFFICIEL TOURNAMENT BROADCAST</div>
+        <h1 id="overlayTournamentTitle" class="header-main-title">TOURNOI DES CHAMPIONS</h1>
+      </div>
+      <div id="viewTagBadge" class="header-tag">POULES & CLASSEMENT</div>
+    </header>
+
+    <!-- CONTENT VIEWS -->
+    <main class="tourn-overlay-body">
+
+      <!-- VUE 1 : POULES & CLASSEMENTS -->
+      <section id="viewGroups" class="tourn-view active">
+        <div id="overlayGroupsGrid" class="overlay-groups-grid">
+          <!-- Injecté dynamiquement en JS -->
+        </div>
+      </section>
+
+      <!-- VUE 2 : TIRAGE AU SORT LIVE -->
+      <section id="viewDraw" class="tourn-view">
+        <div class="draw-stage">
+          <div class="draw-active-spotlight">
+            <div class="draw-sphere-halo"></div>
+            <div id="drawSphere" class="draw-sphere">
+              <span id="drawSphereNumber">🎲</span>
+            </div>
+            <div id="drawPickedName" class="draw-picked-name">EN ATTENTE DU TIRAGE</div>
+            <div id="drawPickedTeam" class="draw-picked-team">TIRAGE AU SORT EN DIRECT</div>
+          </div>
+
+          <div id="drawGroupsTarget" class="draw-groups-target">
+            <!-- Les poules qui se remplissent au fur et à mesure -->
+          </div>
+        </div>
+      </section>
+
+      <!-- VUE 3 : PHASE FINALE (ARBRE DES PLAYOFFS) -->
+      <section id="viewPlayoffs" class="tourn-view">
+        <div class="bracket-display">
+          
+          <!-- Colonne Demi-finales -->
+          <div class="bracket-col">
+            <h3 class="col-title">DEMI-FINALES</h3>
+
+            <div class="bracket-card">
+              <div class="card-badge">DEMI 1</div>
+              <div class="bracket-team">
+                <span id="overlaySemi1Home" class="team-name">1er Poule A</span>
+                <span id="overlaySemi1ScoreH" class="team-score">0</span>
+              </div>
+              <div class="bracket-team">
+                <span id="overlaySemi1Away" class="team-name">2ème Poule B</span>
+                <span id="overlaySemi1ScoreA" class="team-score">0</span>
+              </div>
+            </div>
+
+            <div class="bracket-card">
+              <div class="card-badge">DEMI 2</div>
+              <div class="bracket-team">
+                <span id="overlaySemi2Home" class="team-name">1er Poule B</span>
+                <span id="overlaySemi2ScoreH" class="team-score">0</span>
+              </div>
+              <div class="bracket-team">
+                <span id="overlaySemi2Away" class="team-name">2ème Poule A</span>
+                <span id="overlaySemi2ScoreA" class="team-score">0</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Colonne Finale -->
+          <div class="bracket-col bracket-col-final">
+            <h3 class="col-title" style="color:#ff8fb8;">GRANDE FINALE</h3>
+
+            <div class="bracket-card final-glow-card">
+              <div class="card-badge gold-badge">🏆 MATCH DU TITRE</div>
+              <div class="bracket-team">
+                <span id="overlayFinalHome" class="team-name">Finaliste 1</span>
+                <span id="overlayFinalScoreH" class="team-score">0</span>
+              </div>
+              <div class="bracket-team">
+                <span id="overlayFinalAway" class="team-name">Finaliste 2</span>
+                <span id="overlayFinalScoreA" class="team-score">0</span>
+              </div>
+            </div>
+
+            <div id="overlayWinnerBanner" class="champion-banner">
+              <div class="crown-icon">👑</div>
+              <div class="champ-label">CHAMPION DU TOURNOI</div>
+              <div id="overlayWinnerName" class="champ-name">---</div>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+    </main>
+
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/js/tournament-overlay.js"></script>
+</body>
+</html>
