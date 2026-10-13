@@ -22,16 +22,10 @@ if (!fs.existsSync(DATA_DIR)) {
 }
 
 // ---------- Authentification admin ----------
-// ADMIN_PASSWORD défini => le panneau /admin et toutes les modifications sont protégés.
-// L'overlay (/overlay) reste public en lecture seule (pour OBS).
+// ADMIN_PASSWORD défini => le panneau /admin est protégé.
+// Si non défini => libre d'accès pour plus de simplicité.
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || '';
 const AUTH_ENABLED = ADMIN_PASSWORD !== '';
-
-if (!AUTH_ENABLED && process.env.NODE_ENV === 'production') {
-  console.error('\n❌ ADMIN_PASSWORD manquant : en production le panneau admin doit être protégé.');
-  console.error('   Définis la variable d\'environnement ADMIN_PASSWORD puis relance.\n');
-  process.exit(1);
-}
 
 const AUTH_TOKEN = crypto.createHmac('sha256', ADMIN_PASSWORD || 'local').update('multiplex-admin').digest('hex');
 const COOKIE_NAME = 'mx_admin';
